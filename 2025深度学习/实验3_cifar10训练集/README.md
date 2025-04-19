@@ -9,4 +9,4 @@
 ## 代码文件说明
 本项目包含以下文件：
 - `cifar10_cnn.py`: 完整的Python脚本，包含所有实验步骤
-- `CIFAR10_CNN实验.ipynb`: Jupyter Notebook格式的实验文件（与Python脚本内容相同）
+- `model.py`: 定义训练模型的文件
