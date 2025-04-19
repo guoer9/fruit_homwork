@@ -73,7 +73,7 @@ model_manager = ModelManager()
 
 # 设备配置
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(f"使用设备: {device}")
+print(f"Using device: {device}")
 
 
 
@@ -152,13 +152,13 @@ def train_model(model, trainloader, testloader, criterion, optimizer, epoch):
         print(f'Epoch {epoch + 1}: Train Acc = {train_acc:.3f}%, Test Acc = {test_acc:.3f}%')
     
     end_time = time.time()
-    print(f'训练完成！总耗时: {end_time - start_time:.2f} 秒')
+    print(f'Training completed! Total time: {end_time - start_time:.2f} seconds')
     
     return train_losses, test_losses, train_accs, test_accs
 
 # 3. 训练不同模型的函数
 def train_and_evaluate_model(model_name, epoch, lr=0.001):
-    print(f"\n{'='*20} 训练模型: {model_name} {'='*20}")
+    print(f"\n{'='*20} Training Model: {model_name} {'='*20}")
     
     # 获取模型
     model = model_manager.get_model(model_name).to(device)
@@ -173,7 +173,7 @@ def train_and_evaluate_model(model_name, epoch, lr=0.001):
     )
     
     # 评估模型
-    evaluate_model(model, testloader)
+    evaluate_model(model, testloader, model_name)
     
     # 可视化训练过程
     visualize_training_process(train_losses, test_losses, train_accs, test_accs, epoch, model_name)
@@ -181,7 +181,7 @@ def train_and_evaluate_model(model_name, epoch, lr=0.001):
     # 保存模型
     save_path = f'cifar10_{model_name}_model.pth'
     torch.save(model.state_dict(), save_path)
-    print(f'模型已保存至 {save_path}')
+    print(f'Model saved to {save_path}')
     
     return model, train_accs[-1], test_accs[-1]
 
@@ -191,31 +191,31 @@ def visualize_training_process(train_losses, test_losses, train_accs, test_accs,
     
     # 绘制损失曲线
     plt.subplot(1, 2, 1)
-    plt.plot(range(1, num_epochs + 1), train_losses, 'b-', label='训练损失')
-    plt.plot(range(1, num_epochs + 1), test_losses, 'r-', label='测试损失')
-    plt.xlabel('训练轮次')
-    plt.ylabel('损失')
-    plt.title(f'{model_name} - 训练和测试损失')
+    plt.plot(range(1, num_epochs + 1), train_losses, 'b-', label='Training Loss')
+    plt.plot(range(1, num_epochs + 1), test_losses, 'r-', label='Test Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.title(f'{model_name} - Training and Test Loss')
     plt.legend()
     plt.grid(True)
     
     # 绘制准确率曲线
     plt.subplot(1, 2, 2)
-    plt.plot(range(1, num_epochs + 1), train_accs, 'b-', label='训练准确率')
-    plt.plot(range(1, num_epochs + 1), test_accs, 'r-', label='测试准确率')
-    plt.xlabel('训练轮次')
-    plt.ylabel('准确率 (%)')
-    plt.title(f'{model_name} - 训练和测试准确率')
+    plt.plot(range(1, num_epochs + 1), train_accs, 'b-', label='Training Accuracy')
+    plt.plot(range(1, num_epochs + 1), test_accs, 'r-', label='Test Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy (%)')
+    plt.title(f'{model_name} - Training and Test Accuracy')
     plt.legend()
     plt.grid(True)
     
     plt.tight_layout()
     # 替换show为savefig
-    plt.savefig(f'{model_name}_training_process.png')
+    plt.savefig(f'model_trainout_image/{model_name}_training_process.png')
     plt.close()  # 关闭图形，释放内存
 
 # 5. 模型评估
-def evaluate_model(model, testloader):
+def evaluate_model(model, testloader, model_name):
     # 设置为评估模式
     model.eval()
     
@@ -239,7 +239,7 @@ def evaluate_model(model, testloader):
     # 绘制混淆矩阵
     plt.figure(figsize=(10, 8))
     plt.imshow(confusion_matrix, interpolation='nearest', cmap=plt.cm.Blues)
-    plt.title('混淆矩阵')
+    plt.title('Confusion Matrix')
     plt.colorbar()
     plt.xticks(np.arange(10), classes, rotation=45)
     plt.yticks(np.arange(10), classes)
@@ -253,24 +253,26 @@ def evaluate_model(model, testloader):
                      color="white" if confusion_matrix[i, j] > thresh else "black")
     
     plt.tight_layout()
-    plt.ylabel('真实标签')
-    plt.xlabel('预测标签')
-    plt.show()
+    plt.ylabel('True Label')
+    plt.xlabel('Predicted Label')
+    plt.savefig(f'model_trainout_image/{model_name}_confusion_matrix.png')
+    plt.close()
     
     # 显示每个类别的准确率
     plt.figure(figsize=(10, 6))
     plt.bar(classes, class_accuracy.cpu().numpy())
-    plt.title('每个类别的准确率')
+    plt.title('Accuracy for Each Class')
     plt.ylim(0, 1)
     plt.xticks(rotation=45)
-    plt.show()
+    plt.savefig(f'model_trainout_image/{model_name}_class_accuracy.png')
+    plt.close()
     
     # 输出总体准确率
-    print(f'总体测试准确率: {100 * confusion_matrix.diag().sum() / confusion_matrix.sum():.2f}%')
+    print(f'Overall Test Accuracy: {100 * confusion_matrix.diag().sum() / confusion_matrix.sum():.2f}%')
     
     # 输出每个类别的准确率
     for i, class_name in enumerate(classes):
-        print(f'{class_name} 类别准确率: {100 * class_accuracy[i]:.2f}%')
+        print(f'{class_name} Class Accuracy: {100 * class_accuracy[i]:.2f}%')
 
 # 6. 可视化第一层卷积核
 def visualize_filters(model, model_name):
@@ -291,9 +293,11 @@ def visualize_filters(model, model_name):
         plt.title(f'Filter {i+1}')
     
     plt.tight_layout()
-    plt.suptitle(f'{model_name} - 第一层卷积核可视化', fontsize=16)
+    plt.suptitle(f'{model_name} - First Layer Convolution Kernel Visualization', fontsize=16)
     plt.subplots_adjust(top=0.9)
-    plt.show()
+    # 将plt.show()替换为
+    plt.savefig(f'model_trainout_image/{model_name}_filters.png')
+    plt.close()
 
 # 7. 比较不同模型的性能
 def compare_models(models_to_train, epoch, lr=0.001):
@@ -316,18 +320,19 @@ def compare_models(models_to_train, epoch, lr=0.001):
     x = np.arange(len(model_names))
     width = 0.35
     
-    plt.bar(x - width/2, train_accs, width, label='训练准确率')
-    plt.bar(x + width/2, test_accs, width, label='测试准确率')
+    plt.bar(x - width/2, train_accs, width, label='Training Accuracy')
+    plt.bar(x + width/2, test_accs, width, label='Test Accuracy')
     
-    plt.xlabel('模型')
-    plt.ylabel('准确率 (%)')
-    plt.title('不同模型的训练和测试准确率比较')
+    plt.xlabel('Model')
+    plt.ylabel('Accuracy (%)')
+    plt.title('Comparison of Training and Test Accuracy')
     plt.xticks(x, model_names)
     plt.legend()
     plt.grid(True, axis='y')
     
     plt.tight_layout()
-    plt.show()
+    plt.savefig('model_trainout_image/model_comparison.png')
+    plt.close()
     
     return results
 
@@ -352,17 +357,17 @@ def load_model_and_predict(model_name, images):
 # 示例用法
 if __name__ == "__main__":
     # 列出所有可用的模型
-    print("可用模型:", model_manager.list_available_models())
+    print("Available models:", model_manager.list_available_models())
     
     # 选择要训练的模型
-    # models_to_train = ['custom_cnn', 'lenet', 'alexnet', 'resnet18', 'vgg16']
-    models_to_train = ['custom_cnn', 'lenet', 'alexnet', 'resnet18', 'vgg16']  
+    # models_to_train = ['custom_cnn', 'lenet', 'alexnet', 'resnet18', 'vgg16'，'resnet_fruit','resnet_fruit_v2']
+    models_to_train = ['custom_cnn', 'lenet', 'alexnet', 'resnet18', 'vgg16','resnet_fruit','resnet_fruit_v2'] 
     
     # 训练并比较选定的模型
     epoch = 20
     results = compare_models(models_to_train, epoch)
     
     # 打印比较结果
-    print("\n模型性能比较:")
+    print("\nModel Performance Comparison:")
     for model_name, metrics in results.items():
-        print(f"{model_name}: 训练准确率 = {metrics['train_acc']:.2f}%, 测试准确率 = {metrics['test_acc']:.2f}%") 
+        print(f"{model_name}: Training Accuracy = {metrics['train_acc']:.2f}%, Test Accuracy = {metrics['test_acc']:.2f}%") 
